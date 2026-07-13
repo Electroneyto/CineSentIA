@@ -66,18 +66,14 @@ export default function Home() {
                 ))}
               </div>
               <button id="analyze-button" type="button" className="analyze-button" disabled>
-                <span id="button-label">Cargando modelo…</span><span aria-hidden="true">→</span>
+                <span id="button-label">Analizar crítica</span><span aria-hidden="true">→</span>
               </button>
               <p className="privacy-note"><span aria-hidden="true">◉</span> Tu texto no sale de este dispositivo.</p>
             </article>
 
             <article className="result-panel panel" aria-live="polite">
               <div className="panel-top"><span>02</span><h3>Resultado</h3><b>TF‑IDF + Naive Bayes</b></div>
-              <div id="result-empty" className="result-empty">
-                <div className="loader-ring" />
-                <p id="model-status">Preparando el modelo del proyecto…</p>
-              </div>
-              <div id="result-content" className="result-content" hidden>
+              <div id="result-content" className="result-content">
                 <div className="sentiment-row">
                   <div><span className="micro-label">Sentimiento general</span><strong id="sentiment-label">—</strong></div>
                   <div className="score-dial" id="score-dial"><span id="score-value">—</span><small>positiva</small></div>

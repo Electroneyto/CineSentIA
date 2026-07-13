@@ -4,7 +4,6 @@
   const button = $("#analyze-button");
   const buttonLabel = $("#button-label");
   const charCount = $("#char-count");
-  const modelStatus = $("#model-status");
   let model = null;
   let featureMap = null;
   let stopwords = null;
@@ -71,15 +70,26 @@
   }
 
   function topicFor(value) {
-    const terms = new Set(termsFor(value));
-    const scored = model.topics.map((topic) => ({
-      ...topic,
-      score: topic.terms.reduce((sum, [term, weight]) => sum + (terms.has(term) ? weight : 0), 0),
+    const categories = [
+      ["Guion e historia", ["guion", "historia", "trama", "argumento", "narrativa", "dialogo", "final", "personaje"]],
+      ["Actuación y reparto", ["actuacion", "actor", "actriz", "reparto", "interpretacion", "protagonista"]],
+      ["Dirección y estilo", ["direccion", "director", "directora", "realizacion", "escena", "montaje"]],
+      ["Ritmo y duración", ["ritmo", "lenta", "lento", "rapida", "rapido", "duracion", "aburrida", "aburrido"]],
+      ["Música y sonido", ["musica", "banda sonora", "sonido", "audio", "cancion"]],
+      ["Fotografía y efectos", ["fotografia", "visual", "visuales", "efectos", "animacion", "camara", "imagen"]],
+      ["Comedia y entretenimiento", ["comedia", "divertida", "divertido", "risa", "humor", "entretenida", "entretenido"]],
+      ["Terror y suspenso", ["terror", "horror", "miedo", "suspenso", "tension", "monstruo", "asesino"]],
+    ];
+    const normalized = stripAccents(preprocess(value));
+    const scored = categories.map(([label, keys]) => ({
+      label,
+      matches: keys.filter((key) => normalized.includes(key)),
+      score: keys.reduce((sum, key) => sum + (normalized.split(key).length - 1), 0),
     })).sort((a, b) => b.score - a.score);
-    const topic = scored[0];
+    if (!scored[0].score) return { label: "Valoración general", terms: "Opinión global sobre la película o serie" };
     return {
-      label: `Tema ${topic.id}`,
-      terms: topic.terms.slice(0, 8).map(([term]) => term).join(" · "),
+      label: scored[0].label,
+      terms: `Señales detectadas: ${scored[0].matches.join(" · ")}`,
     };
   }
 
@@ -113,9 +123,7 @@
     if (value.length < 10) {
       input.focus();
       input.setAttribute("aria-invalid", "true");
-      modelStatus.textContent = "Escribe al menos 10 caracteres para analizar.";
-      $("#result-empty").hidden = false;
-      $("#result-content").hidden = true;
+      buttonLabel.textContent = "Escribe al menos 10 caracteres";
       return;
     }
     input.removeAttribute("aria-invalid");
@@ -134,9 +142,8 @@
     $("#recommendation-value").textContent = recommendation;
     $("#topic-label").textContent = topic.label;
     $("#topic-terms").textContent = topic.terms;
-    $("#result-empty").hidden = true;
-    $("#result-content").hidden = false;
     renderAspects(aspectRows(value));
+    buttonLabel.textContent = "Analizar crítica";
   }
 
   function updateCount() {
@@ -168,11 +175,9 @@
       featureMap = new Map(model.features.map(([term, idf, log0, log1]) => [term, [idf, log0, log1]]));
       button.disabled = false;
       buttonLabel.textContent = "Analizar crítica";
-      modelStatus.textContent = `Modelo listo · ${model.features.length.toLocaleString("es-BO")} señales aprendidas`;
       analyze();
     })
     .catch(() => {
-      modelStatus.textContent = "No se pudo cargar el modelo. Recarga la página para intentarlo otra vez.";
       buttonLabel.textContent = "Modelo no disponible";
     });
 })();
